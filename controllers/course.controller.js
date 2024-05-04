@@ -15,19 +15,20 @@ import NotificationModel from "../models/notification.js";
 import redis from "../utils/redis.js";
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename);
+import axios from "axios";
 
 // upload course
 export const uploadCourse = catchAsyncError(async (req, res, next) => {
   try {
     const data = req.body;
-    const thumbnail = data.thumbnail;
+    const ThumbNail = data.ThumbNail;
 
-    if (thumbnail) {
-      const myCloud = await cloudinary.v2.uploader.upload(thumbnail, {
+    if (ThumbNail) {
+      const myCloud = await cloudinary.v2.uploader.upload(ThumbNail, {
         folder: "courses",
       });
 
-      data.thumbnail = {
+      data.ThumbNail = {
         public_id: myCloud.public_id,
         url: myCloud.url,
       };
@@ -41,27 +42,69 @@ export const uploadCourse = catchAsyncError(async (req, res, next) => {
 
 // for edit operation of course
 
+// export const editCourse = catchAsyncError(async (req, res, next) => {
+//   try {
+//     const data = req.body;
+//     const ThumbNail = data.ThumbNail;
+
+//     if (ThumbNail) {
+//       await cloudinary.v2.uploader.destroy(ThumbNail.public_id);
+
+//       const myCloud = await cloudinary.v2.uploader.upload(ThumbNail, {
+//         folder: "courses",
+//       });
+
+//       data.ThumbNail = {
+//         public_id: myCloud.public_id,
+//         url: myCloud.secure_url,
+//       };
+//     }
+
+//     const courseId = req.params.id;
+//     const course = await CourseModel.findByIdAndUpdate(
+//       courseId,
+//       { $set: data },
+//       { new: true }
+//     );
+
+//     res.status(201).json({ success: true, course });
+//   } catch (e) {
+//     return res.status(500).json({ success: false, message: e.message });
+//   }
+// });
+
 export const editCourse = catchAsyncError(async (req, res, next) => {
   try {
     const data = req.body;
-    const thumbnail = data.thumbnail;
+    // console.log(data);
+    const Id = req.params.id;
 
-    if (thumbnail) {
-      await cloudinary.v2.uploader.destroy(thumbnail.public_id);
+    const ThumbNail = data.ThumbNail; 
+    const courseData = await CourseModel.findById(Id);
 
-      const myCloud = await cloudinary.v2.uploader.upload(thumbnail, {
+    if (ThumbNail && ThumbNail.startsWith("https") !== 0) {
+      await cloudinary.v2.uploader.destroy(courseData.ThumbNail.public_id);
+
+      const myCloud = await cloudinary.v2.uploader.upload(ThumbNail, {
         folder: "courses",
       });
 
-      data.thumbnail = {
+      data.ThumbNail = {
         public_id: myCloud.public_id,
         url: myCloud.secure_url,
       };
     }
 
-    const courseId = req.params.id;
+    if (ThumbNail && ThumbNail.startsWith("https") !== 0){
+      data.ThumbNail = {
+        public_id: courseData?.ThumbNail.public_id,
+        url: courseData?.ThumbNail.secure_url,
+      };
+    }
+
+
     const course = await CourseModel.findByIdAndUpdate(
-      courseId,
+      Id,
       { $set: data },
       { new: true }
     );
@@ -86,7 +129,7 @@ export const getSingleCourse = catchAsyncError(async (req, res, next) => {
       });
     } else {
       const course = await CourseModel.findById(req.params.id).select(
-        "-courseData.videoUrl -courseData.suggesstion -courseData.questions -courseData.links"
+        "-courseContent.videoUrl -courseContent.suggesstion -courseContent.questions -courseContent.links"
       );
 
       await redis.set(courseId, JSON.stringify(course), "EX", 604800);
@@ -101,7 +144,7 @@ export const getSingleCourse = catchAsyncError(async (req, res, next) => {
 export const getAllCourse = catchAsyncError(async (req, res, next) => {
   try {
     const courses = await CourseModel.find().select(
-      "-courseData.videoUrl -courseData.suggestions -courseData.questions -courseData.links"
+      "-courseContent.videoUrl -courseContent.suggestion -courseContent.questions -courseContent.links"
     );
     res.status(200).json({ success: true, courses });
   } catch (error) {
@@ -122,7 +165,7 @@ export const getAllCourse = catchAsyncError(async (req, res, next) => {
 //       });
 //     } else {
 //       const courses = await CourseModel.find().select(
-//         "-courseData.videoUrl -courseData.suggestions -courseData.questions -courseData.links"
+//         "-courseContent.videoUrl -courseContent.suggestion -courseContent.questions -courseContent.links"
 //       );
 //       await redis.set("allCourses", JSON.stringify(courses));
 //       res.status(200).json({ success: true, courses });
@@ -148,7 +191,7 @@ export const getCourseByUser = catchAsyncError(async (req, res, next) => {
       });
     }
     const course = await CourseModel.findById(courseId);
-    const content = course.courseData;
+    const content = course.courseContent;
     res.status(200).json({ success: true, content });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
@@ -167,7 +210,7 @@ export const addQuestion = catchAsyncError(async (req, res, next) => {
         .json({ success: false, message: "Invalid content id" });
     }
 
-    const courseContent = course.courseData.find((item) =>
+    const courseContent = course.courseContent.find((item) =>
       item._id.equals(contentId)
     );
     if (!courseContent) {
@@ -204,7 +247,7 @@ export const addAnswer = catchAsyncError(async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(contentId)) {
       return next(new ErrorHandler(400, "Invalid content id"));
     }
-    const courseContent = course.courseData.find((item) =>
+    const courseContent = course.courseContent.find((item) =>
       item._id.equals(contentId)
     );
     if (!courseContent) {
@@ -367,5 +410,25 @@ export const deleteCourse = catchAsyncError(async (req, res, next) => {
       .json({ success: true, message: "Course deleted successfully" });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+export const generateVideoUrl = catchAsyncError(async (req, res, next) => {
+  try {
+    const { videoId } = req.body;
+    const response = await axios.post(
+      `https://dev.vdocipher.com/api/videos/${videoId}/otp`,
+      { tt: 300 },
+      {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Apisecret ${process.env.VDOCIPHER_API_SECRET}`,
+        },
+      }
+    );
+    res.json(response.data);
+  } catch (err) {
+    return next(new ErrorHandler(400, error.message));
   }
 });

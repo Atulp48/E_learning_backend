@@ -1,1 +1,0 @@
-  const myCloud = await cloudinary.v2.uploader.upload(thumbnail.url, {

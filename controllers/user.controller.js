@@ -189,10 +189,11 @@ export const updateAccessToken = catchAsyncError(async (req, res, next) => {
     res.cookie("refresh_token", refreshToken, refressTokenOptions);
 
     await redis.set(user._id, JSON.stringify(user), "EX", 604800); // 7 days expiry
-    res.status(200).json({
-      status: "success",
-      access_token,
-    });
+    // res.status(200).json({
+    //   status: "success",
+    //   access_token,
+    // });
+    next();
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -367,7 +368,7 @@ export const updateUserRole = catchAsyncError(async (req, res, next) => {
 // delete user -- admin
 export const deleteUser = catchAsyncError(async (req, res, next) => {
   try {
-    const { id } = req.body;
+    const { id } = req.params;
     const user = await userModel.findById(id);
     if (!user) {
       return next(new ErrorHandler(400, "User not found"));

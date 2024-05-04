@@ -24,12 +24,12 @@ const commentSchema = new mongoose.Schema({
 const courseDataSchema = new mongoose.Schema({
   videoUrl: String,
   title: String,
-  videoSections: String,
+  videoSection: String,
   description: String,
   videoLength: Number,
   videoPlayer: Number,
   links: [linkSchema],
-  suggesstion: String,
+  suggestion: String,
   questions: [commentSchema],
 });
 
@@ -47,10 +47,14 @@ const courseSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    estimatedPrice: {
+    estiMatedPrice: {
       type: Number,
     },
-    thumbnail: {
+    categories: {
+      type: String,
+      required:true
+    },
+    ThumbNail: {
       public_id: String,
       url: String,
     },
@@ -66,10 +70,10 @@ const courseSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    benefits: [{ title: String }],
+    benifit: [{ title: String }],
     prerequisites: [{ title: String }],
     reviews: [reviewSchema],
-    courseData: [courseDataSchema],
+    courseContent: [courseDataSchema],
     rating: {
       type: Number,
       default: 0,
