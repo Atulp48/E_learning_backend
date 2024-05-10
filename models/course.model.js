@@ -1,25 +1,33 @@
 import mongoose from "mongoose";
 
-const reviewSchema = new mongoose.Schema({
-  user: Object,
-  rating: {
-    type: String,
-    default: 0,
+const reviewSchema = new mongoose.Schema(
+  {
+    user: Object,
+    rating: {
+      type: Number,
+      default: 0,
+    },
+    comment: String,
+    commentReplies: [Object],
   },
-  comment: String,
-  commentReplies: [Object],
-});
+  {
+    timestamps: true,
+  }
+);
 
 const linkSchema = new mongoose.Schema({
   title: String,
   url: String,
 });
 
-const commentSchema = new mongoose.Schema({
-  user: Object,
-  question: String,
-  questionReplies: [Object],
-});
+const commentSchema = new mongoose.Schema(
+  {
+    user: Object,
+    question: String,
+    questionReplies: [Object],
+  },
+  { timestamps: true }
+);
 
 const courseDataSchema = new mongoose.Schema({
   videoUrl: String,
@@ -52,7 +60,7 @@ const courseSchema = new mongoose.Schema(
     },
     categories: {
       type: String,
-      required:true
+      required: true,
     },
     ThumbNail: {
       public_id: String,

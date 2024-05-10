@@ -23,6 +23,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoosh": "^0.0.7",
     "node-cron": "^3.0.3",
-    "nodemailer": "^6.9.11"
+    "nodemailer": "^6.9.11",
+    "stripe": "^15.5.0"
   }
 }

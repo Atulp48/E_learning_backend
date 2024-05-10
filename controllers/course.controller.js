@@ -119,6 +119,7 @@ export const editCourse = catchAsyncError(async (req, res, next) => {
 export const getSingleCourse = catchAsyncError(async (req, res, next) => {
   try {
     const courseId = req.params.id;
+    // console.log(courseId);
 
     const isCacheExist = await redis.get(courseId);
     if (isCacheExist) {
@@ -203,6 +204,8 @@ export const getCourseByUser = catchAsyncError(async (req, res, next) => {
 export const addQuestion = catchAsyncError(async (req, res, next) => {
   try {
     const { courseId, question, contentId } = req.body;
+    // console.log(courseId,question,contentId,req.user)
+
     const course = await CourseModel.findById(courseId);
     if (!mongoose.Types.ObjectId.isValid(contentId)) {
       return res

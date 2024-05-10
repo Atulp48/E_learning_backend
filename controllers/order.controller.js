@@ -2,7 +2,6 @@ import { catchAsyncError } from "../utils/catchAsyncError.js";
 import ErrorHandler from "../utils/errorHandler.js";
 import path from "path";
 import ejs from "ejs";
-
 import { fileURLToPath } from "url";
 import userModel from "../models/user.model.js";
 import CourseModel from "../models/course.model.js";
@@ -11,12 +10,36 @@ import sendMail from "../utils/sendMail.js";
 import NotificationModel from "../models/notification.js";
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename);
+import dotenv from "dotenv";
+import redis from "../utils/redis.js";
+dotenv.config();
+import Stripe from "stripe";
+
+
+
+
+const stripe = Stripe(process.env.STRIPE_SECTRET_KEY);
 
 // create order
 
 export const createOrder = catchAsyncError(async (req, res, next) => {
   try {
     const { courseId, payment_info } = req.body;
+    console.log(courseId)
+    console.log(payment_info);
+
+    if (payment_info) {
+      if ("id" in payment_info) {
+        const paymentIntentId = payment_info.id;
+        const paymentIntent = await stripe.paymentIntents.retrieve(
+          paymentIntentId
+        );
+        if (paymentIntent.status !== "succeeded") {
+          return next(new ErrorHandler(400, "payment not fullfilled"));
+        }
+      }
+    }
+
     const user = await userModel.findById(req.user._id);
     // const couseExistInUser = user.courses.some(course => course._id.toString() === courseId);
     const couseExistInUser = user.courses.some(
@@ -77,6 +100,7 @@ export const createOrder = catchAsyncError(async (req, res, next) => {
     };
 
     user.courses.push(val);
+    await redis.set(req.user?._id, JSON.stringify(user));
     await user.save();
 
     await NotificationModel.create({

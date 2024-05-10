@@ -46,7 +46,13 @@ courseRouter.put(
   isAuthenticated,
   addQuestion
 );
-courseRouter.put("/add-answer", updateAccessToken, isAuthenticated, addAnswer);
+courseRouter.put(
+  "/add-answer",
+  updateAccessToken,
+  isAuthenticated,
+  authorizeRoles("admin"),
+  addAnswer
+);
 courseRouter.put(
   "/add-review/:id",
   updateAccessToken,
