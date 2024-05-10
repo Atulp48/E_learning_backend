@@ -53,7 +53,10 @@ export const isAuthenticated = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler(400, "Access token is not valid(decode)"));
   }
 
+  console.log("2 ",decoded)
+
   const user = await redis.get(decoded.id);
+  console.log("2 ",user)
   if (!user) {
     return next(new ErrorHandler(400, "Please login first"));
   }
