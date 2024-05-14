@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon index.js",
-    "start":"node index.js"
+    "start": "node index.js"
   },
   "author": "ajay verma",
   "license": "ISC",
@@ -20,11 +20,13 @@
     "dotenv": "^16.4.1",
     "ejs": "^3.1.9",
     "express": "^4.18.2",
+    "express-rate-limit": "^7.2.0",
     "ioredis": "^5.3.2",
     "jsonwebtoken": "^9.0.2",
     "mongoosh": "^0.0.7",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.11",
+    "socket.io": "^4.7.5",
     "stripe": "^15.5.0"
   }
 }

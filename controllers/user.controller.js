@@ -25,6 +25,27 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// tocken creation  for user
+
+export const createActivationToken = (user) => {
+  const activationCode = Math.floor(1000 + Math.random() * 9000).toString();
+
+  const token = jwt.sign(
+    {
+      user,
+      activationCode,
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "5m",
+    }
+  );
+
+  return { token, activationCode };
+};
+
+// user operation for all types of operations in
+
 // user registration and opt send by mail
 
 export const registerUser = catchAsyncError(async (req, res, next) => {
@@ -67,23 +88,6 @@ export const registerUser = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler(500, error.message));
   }
 });
-
-export const createActivationToken = (user) => {
-  const activationCode = Math.floor(1000 + Math.random() * 9000).toString();
-
-  const token = jwt.sign(
-    {
-      user,
-      activationCode,
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: "5m",
-    }
-  );
-
-  return { token, activationCode };
-};
 
 // activate user
 

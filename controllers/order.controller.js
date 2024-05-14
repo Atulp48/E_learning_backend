@@ -15,9 +15,6 @@ import redis from "../utils/redis.js";
 dotenv.config();
 import Stripe from "stripe";
 
-
-
-
 const stripe = Stripe(process.env.STRIPE_SECTRET_KEY);
 
 // create order
@@ -25,7 +22,7 @@ const stripe = Stripe(process.env.STRIPE_SECTRET_KEY);
 export const createOrder = catchAsyncError(async (req, res, next) => {
   try {
     const { courseId, payment_info } = req.body;
-    console.log(courseId)
+    console.log(courseId);
     console.log(payment_info);
 
     if (payment_info) {
@@ -108,9 +105,9 @@ export const createOrder = catchAsyncError(async (req, res, next) => {
       title: "New Order",
       message: `You have a new order from ${course.name}`,
     });
-    if (course) {
-      course.purchased += 1;
-    }
+
+    course.purchased += 1;
+
     await course.save();
     newOrder(data, res);
   } catch (error) {

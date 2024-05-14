@@ -79,7 +79,7 @@ export const editCourse = catchAsyncError(async (req, res, next) => {
     // console.log(data);
     const Id = req.params.id;
 
-    const ThumbNail = data.ThumbNail; 
+    const ThumbNail = data.ThumbNail;
     const courseData = await CourseModel.findById(Id);
 
     if (ThumbNail && ThumbNail.startsWith("https") !== 0) {
@@ -95,13 +95,12 @@ export const editCourse = catchAsyncError(async (req, res, next) => {
       };
     }
 
-    if (ThumbNail && ThumbNail.startsWith("https") !== 0){
+    if (ThumbNail && ThumbNail.startsWith("https") !== 0) {
       data.ThumbNail = {
         public_id: courseData?.ThumbNail.public_id,
         url: courseData?.ThumbNail.secure_url,
       };
     }
-
 
     const course = await CourseModel.findByIdAndUpdate(
       Id,
@@ -193,7 +192,7 @@ export const getCourseByUser = catchAsyncError(async (req, res, next) => {
     }
     const course = await CourseModel.findById(courseId);
     const content = course.courseContent;
-    res.status(200).json({ success: true, content });
+    res.status(200).json({ success: true, content, course });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -269,6 +268,8 @@ export const addAnswer = catchAsyncError(async (req, res, next) => {
     const newAnswer = {
       user: req.user,
       answer,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
     // add this answer in our course content
     question.questionReplies.push(newAnswer);
@@ -344,10 +345,14 @@ export const addReview = catchAsyncError(async (req, res, next) => {
       course.rating = avg / course.reviews.length;
     }
     await course.save();
-    const notification = {
+
+    await redis.set(courseId, JSON.stringify(course), "EX", 604800);
+
+    await NotificationModel.create({
+      user: req.user._id,
       title: "New Review Received",
       message: `${req.user.name} has added a review in ${course.name}`,
-    };
+    });
 
     // create notification for admin
     return res.status(200).json({ success: true, course });
@@ -375,12 +380,15 @@ export const addReplyToReview = catchAsyncError(async (req, res, next) => {
     const replyData = {
       user: req.user,
       comment,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
     if (!review.commentReplies) {
       review.commentReplies = [];
     }
     review.commentReplies.push(replyData);
     await course.save();
+    await redis.set(courseId, JSON.stringify(course), "EX", 604800);
     return res.status(200).json({ success: true, course });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

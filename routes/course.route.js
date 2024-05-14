@@ -50,7 +50,6 @@ courseRouter.put(
   "/add-answer",
   updateAccessToken,
   isAuthenticated,
-  authorizeRoles("admin"),
   addAnswer
 );
 courseRouter.put(
